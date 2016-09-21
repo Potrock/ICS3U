@@ -6,6 +6,8 @@
 		shooting at me, and move off of the walls to avoid the shot.
 		Also, use Math.random with a min/max to randomize movement at times to avoid trig trackers
  */
+
+ // TEST FOR GIT SYNCING
 package Blais_Robots;
 
 
