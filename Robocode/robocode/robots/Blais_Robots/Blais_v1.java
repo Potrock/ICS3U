@@ -99,6 +99,7 @@ public class Blais_v1 extends Robot {
       randomNum = 0.1 + (int)(Math.random() * 2);
 
       while (spotted) {
+        randomNum = 0.1 + (int)(Math.random() * 2);
         if (randomNum > 0.1 && randomNum <= 0.3) { //Take our random number, and turn it into a (kinda)random movement!
           turnLeft(90);
           ahead(100);
@@ -106,27 +107,32 @@ public class Blais_v1 extends Robot {
           ahead(100);
           turnLeft(90);
           ahead(100);
+          spotted = false;
           scan();
         } else if (randomNum > 0.3 && randomNum <= 0.5) {
           back(100);
           ahead(100);
           scan();
+          spotted = false;
         } else if (randomNum > 0.5 && randomNum <= 0.8) {
           turnRight(90);
-          ahead(100);
+          back(100);
           turnRight(90);
-          ahead(100);
+          back(100);
           turnRight(90);
-          ahead(100);
+          back(100);
           scan();
+          spotted = false;
         } else if (randomNum > 0.8 && randomNum <= 1) {
           ahead(100);
           back(200);
           scan();
+          spotted = false;
         } else if (randomNum > 1 && randomNum <= 1.4) {
           ahead(100);
           back(200);
           scan();
+          spotted = false;
         } else if (randomNum > 1.4 && randomNum <= 1.7) {
           back(300);
           turnRight(90);
@@ -134,18 +140,21 @@ public class Blais_v1 extends Robot {
           turnRight(90);
           back(300);
           scan();
+          spotted = false;
         } else if (randomNum > 1.7 && randomNum <= 2) {
           turnLeft(90);
           ahead(50);
           turnRight(90);
           ahead(50);
           scan();
+          spotted = false;
         } else {
           turnLeft(90);
           ahead(100);
           turnLeft(90);
           ahead(100);
           scan();
+          spotted = false;
         }
       }
       turnGunRight(360); //Sweeps scanner?
