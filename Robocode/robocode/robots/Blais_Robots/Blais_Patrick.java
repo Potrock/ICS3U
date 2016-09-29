@@ -8,10 +8,11 @@ import robocode.util.Utils;
 
 /**
  * Opera Bot, by Patrick B
- * Compile: javac -cp C:\Users\Suzan\Documents\GitHub\ICS3U\Robocode\robocode\libs\robocode.jar Blais_Patrick_v2.java
+ * Compile: javac -cp C:\Users\Suzan\Documents\GitHub\ICS3U\Robocode\robocode\libs\robocode.jar Blais_Patrick.java
  *
  * Uses randomized movement (RNG based) to make it harder to hit, while being a Simple Robot.
  * Incorporates Predictive Targetting, hopefully without getting disabled by missing every shot.
+ * Shoots differently depending on range, to prevent losing too much energy on a miss.
  *
  * My strategy: Get the highest amount of points through Survival. When in practice matches against other classmates, I had less damage but significantly more survival points.
  * I've messed around with other types of shooters, tweaking values, bullet powers, but
@@ -20,13 +21,11 @@ import robocode.util.Utils;
  */
 public class Blais_Patrick extends Robot {
 double previousEnergy = 100;
-int dist = 50;   // distance to move when we're hit
-int bulletPower;
+int dist = 50;   // Distance to move when hit
+int bulletPower = 2;
 double gunTurnAmmount = 10;   // Initialize gunTurn to 10
 
-/**
- * Runs on startup, one time commands to be run
- */
+
 public void run() {
         // Sets colors
         setBodyColor(Color.black);
@@ -51,7 +50,7 @@ public void run() {
                 double rng2 = Math.random();
 
                 if (rng1 <= 0.25 && rng1 > 0) { //The RNG based movement system.
-                        System.out.println(rng1 + " , " + rng2); //for test purposes
+                        System.out.println(rng1 + " , " + rng2); //For debug
                         turnLeft(Math.max(rng1 * 500, rng2 * 500));
                         ahead(Math.max(rng1 * 500, rng2 * 400));
                 } else if (rng1 <=0.5 && rng1 > 0.25) {
@@ -64,13 +63,9 @@ public void run() {
                         turnRight(Math.max(rng1 * 450, rng2 * 350));
                         ahead(Math.max(rng1 * 250, rng2 * 250));
                 }
-                turnGunRight(360); //Sweeps the scanner
         }
 }
 
-/**
- * onScannedRobot:  Fire!
- */
 public void onScannedRobot(ScannedRobotEvent e) {
 
         double changeInEnergy = previousEnergy-e.getEnergy();
@@ -85,13 +80,14 @@ public void onScannedRobot(ScannedRobotEvent e) {
         // }
 
 
-        if (getOthers() == 4) {
+        if (getOthers() == 15) {
                 //KILL PATEL_MISTER
-                String intendedTarget = "sample.SittingDuck";
-                System.out.println("Initializing operation kill " + intendedTarget);
+                String intendedTarget = "patel.mister_Patel.Mister";
                 if (e.getName().equals(intendedTarget)) {
+                        System.out.println("Initializing operation kill " + intendedTarget);
+                        if (e.getVelocity() > 0) {
+                                bulletPower = 2;
                                 System.out.println("They're moving, shooting at a lower power for safety reasons.");
-                                bulletPower = 1;
                                 //Gets the sum of your heading, and the bearing of the spotted robot (e).
                                 double headOnBearing = Math.toRadians(getHeading()) + Math.toRadians(e.getBearing());
 
@@ -101,46 +97,35 @@ public void onScannedRobot(ScannedRobotEvent e) {
 
                                 //Takes into account the current gun heading, and subtracts it from the linear bearing that we previously acquired ^^
                                 turnGunRight(Math.toDegrees(Utils.normalRelativeAngle(linearBearing - Math.toRadians(getGunHeading()))));
-
-
                                 fire(bulletPower);
-                                System.out.println("Fired at the intendedTarget");
-                                bulletPower = 3; //Sets us to be using max power.
-                                System.out.println("I shot them hard!");
-                                fire(bulletPower); //They aren't moving! Hit them hard (Power is 3, in this case.)
-                                System.out.println("Fired at the intendedTarget");
-
+                        } else {
+                                bulletPower = 3;
+                                fire(bulletPower);
+                        }
                 }
 
         } else {
-                        System.out.println("They're close, firing at power " + bulletPower);
-                        bulletPower = 3;
-                        //Gets the sum of your heading, and the bearing of the spotted robot (e).
+                if (e.getVelocity() > 0) {
+                        bulletPower = 2;
+                        System.out.println("They're moving, fire at " + bulletPower);
                         double headOnBearing = Math.toRadians(getHeading()) + Math.toRadians(e.getBearing());
-
-                        //Gets the sum of headOnBearing + the inversed sine of the velocity divided by the bullet speed.
-                        //Then multiplies it by the sin of the heading(in Radians), afterwards, subtracts headOnBearing from it.
                         double linearBearing = headOnBearing + Math.asin(e.getVelocity() / Rules.getBulletSpeed(bulletPower) * Math.sin(Math.toRadians(e.getHeading()) - headOnBearing));
-
-                        //Takes into account the current gun heading, and subtracts it from the linear bearing that we previously acquired ^^
                         turnGunRight(Math.toDegrees(Utils.normalRelativeAngle(linearBearing - Math.toRadians(getGunHeading()))));
-
-
                         fire(bulletPower);
-                        scan(); //Restart the scanned robot event
-                        bulletPower = 1; //Sets us to be using max power.
-                        System.out.println("They're far away, shooting at power " + bulletPower);
-                        fire(bulletPower); //They aren't moving! Hit them hard (Power is 3, in this case.)
-                        scan(); //Restart the scanned robot event
+                } else {
+                        System.out.println("Target is standing still");
+                        bulletPower = 3;
+                        fire(bulletPower);
+                }
         }
 }
 public void onHitByBullet(HitByBulletEvent e) {   //When hit by bullet
         turnRight(Utils.normalRelativeAngleDegrees(90 - (getHeading() - e.getHeading()))); //Faces target
-
+        System.out.println("onHitByBullet");
         ahead(dist);
         dist *= -1; //Multiplies 50 * -1, and sets it as the new dist variable.
-        scan();
 }
+
 
 public void onHitWall(HitWallEvent e) {   //Attempting to prevent myself from getting stuck on walls.
         back(400);
@@ -148,13 +133,13 @@ public void onHitWall(HitWallEvent e) {   //Attempting to prevent myself from ge
         ahead(100);
         turnLeft(90);
         ahead(100);
-        scan();
+        System.out.println("onHitWall");
 }
 
 
 public void onHitRobot(HitRobotEvent e) {   //Aims at the robot, and shoots at max power.
         double turnGunAmt = Utils.normalRelativeAngleDegrees(e.getBearing() + getHeading() - getGunHeading()); //Figures out how much to turn gun by taking into account the current gun heading.
-
+        System.out.println("onHitRobot");
         turnGunRight(turnGunAmt);
         fire(3);
 }
